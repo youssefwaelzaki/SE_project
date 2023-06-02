@@ -7,6 +7,8 @@ const publicApiRoutes = require('./routes/public/api');
 const publicViewRoutes = require('./routes/public/view');
 const privateViewRoutes = require('./routes/private/view');
 
+
+
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'hjs');
@@ -38,4 +40,6 @@ app.use(function(req, res, next) {
 });
 
 // Create HTTP Server and Listen for Requests
-app.listen(3000);
+app.listen(3000, () => {
+  console.log('Server is running on port 3000');
+})

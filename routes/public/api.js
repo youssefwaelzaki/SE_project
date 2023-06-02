@@ -2,16 +2,18 @@ const { isEmpty } = require("lodash");
 const { v4 } = require("uuid");
 const db = require("../../connectors/db");
 const roles = require("../../constants/roles");
-module.exports = function (app) {
-app.post("/api/v1/user", async function (req, res) {
+const bcrypt = require("bcrypt");
 
+module.exports = function (app) {
+  app.post("/register", async function (req, res) {
     // Check if user already exists in the system
     const userExists = await db
       .select("*")
       .from("se_project.users")
       .where("email", req.body.email);
+
     if (!isEmpty(userExists)) {
-      return res.status(400).send("user exists");
+      return res.status(400).send("User already exists");
     }
 
     const newUser = {
@@ -21,18 +23,21 @@ app.post("/api/v1/user", async function (req, res) {
       password: req.body.password,
       roleid: roles.user,
     };
-    try {
-      const user = await db("se_project.users").insert(newUser).returning("*");
 
-      return res.status(200).json(user );
+    try {
+      const user = await db("se_project.users")
+        .insert(newUser)
+        .returning("*");
+
+      return res.status(200).json(user);
     } catch (e) {
       console.log(e.message);
       return res.status(400).send("Could not register user");
     }
   });
 
-  // Register HTTP endpoint to create new user
-  app.post("/api/v1/user/login", async function (req, res) {
+  // Register HTTP endpoint to create a new user
+  app.post("/login", async function (req, res) {
     // get users credentials from the JSON body
     const { email, password } = req.body;
     if (!email) {
@@ -83,4 +88,45 @@ app.post("/api/v1/user", async function (req, res) {
       return res.status(400).send("Could not register user");
     }
   });
-}
+
+  app.put("/resetPassword", async function (req, res) {
+    const { email, newPassword } = req.body;
+
+    // Check if the email is provided
+    if (!email) {
+      return res.status(400).send("Email is required");
+    }
+
+    // Check if the new password is provided
+    if (!newPassword) {
+      return res.status(400).send("New password is required");
+    }
+
+    try {
+      // Find the user by email
+      const user = await db
+        .select("*")
+        .from("se_project.users")
+        .where("email", email)
+        .first();
+
+      // If user not found, return an error
+      if (isEmpty(user)) {
+        return res.status(404).send("User not found");
+      }
+
+      
+
+      // Update the user's password in the database
+      await db("se_project.users")
+        .where("id", user.id)
+        .update({ password: newPassword });
+
+      return res.status(200).send("Password reset successful");
+    } catch (e) {
+      console.log(e.message);
+      return res.status(400).send("Could not reset password");
+    }
+  });
+
+};
