@@ -43,4 +43,7 @@ module.exports = function(app) {
     return res.render('stations_example', { ...user, stations });
   });
 
+
+  
+
 };

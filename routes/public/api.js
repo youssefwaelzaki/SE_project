@@ -111,7 +111,7 @@ module.exports = function (app) {
         .first();
 
       // If user not found, return an error
-      if (isEmpty(user)) {
+      if (isEmpty(user) ) {
         return res.status(404).send("User not found");
       }
 
